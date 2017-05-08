@@ -1,0 +1,37 @@
+{
+  "root": true,
+  "extends": "airbnb-base",
+  "plugins": [
+    "import"
+  ],
+  "env": {
+    "browser": true,
+    "node": true,
+    "jest": true
+  },
+  "rules": {
+    // put custom rule overrides here - http://eslint.org/docs/user-guide/configuring
+    "max-len": [1, 120, 2, {"ignoreComments": true}],
+    "quote-props": [1, "consistent-as-needed"],
+    "no-cond-assign": [2, "except-parens"],
+    /* http://eslint.org/docs/rules/comma-dangle */
+    "comma-dangle": ["error", {
+        "arrays": "only-multiline",
+        "objects": "only-multiline",
+        "imports": "only-multiline",
+        "exports": "only-multiline",
+        "functions": "ignore"
+    }],
+    "react/prefer-stateless-function": "off", // don't begrudge me my Components
+    "import/no-extraneous-dependencies": ["error", {
+      "devDependencies": ["**/*.spec.js*"] // don't complain about test imports
+    }],
+    "no-unused-vars": "off", // sometimes unused vars improve readability
+    "arrow-body-style": "off", // we can't always live in the future
+    "arrow-parens": [1, "as-needed"],
+    "import/prefer-default-export": "off", // in case we'll add exports more later
+    /* remove the following before final release */
+    "no-debugger": "off",
+    "no-console": "off"
+  }
+}
