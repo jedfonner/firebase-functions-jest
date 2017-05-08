@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug current Jest test",
+      "type": "node",
+      "request": "launch",
+      "program": "${fileDirname}/../node_modules/jest/bin/jest.js",
+      "stopOnEntry": false,
+      "args": [
+        "--runInBand",
+        "${relativeFile}"
+      ],
+      "cwd": "${fileDirname}",
+      "preLaunchTask": null,
+      "runtimeExecutable": null,
+      "runtimeArgs": [
+        "--nolazy"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "externalConsole": false,
+      "sourceMaps": false,
+      "outDir": null
+    }
+  ]
+}
