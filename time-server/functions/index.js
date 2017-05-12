@@ -49,6 +49,9 @@ exports.date = functions.https.onRequest((req, res) => {
   // Forbidding PUT requests.
   if (req.method === 'PUT') {
     res.status(403).send('Forbidden!');
+    // Added explicit return for testing because Firebase will stop
+    // running a function after receiving a response but Jest won't.
+    return;
   }
   // [END sendError]
 
