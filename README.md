@@ -1,4 +1,6 @@
 # firebase-functions-jest
+[![Build Status](https://travis-ci.org/jedfonner/firebase-functions-jest.svg?branch=master)](https://travis-ci.org/jedfonner/firebase-functions-jest)
+
 Demonstrates how to write unit tests in Jest for Firebase Cloud Functions
 
 ## Why

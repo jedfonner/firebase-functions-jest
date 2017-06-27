@@ -1,0 +1,10 @@
+language: node_js
+node_js:
+  - "node"
+env:
+  - TEST_DIR=email-users
+  - TEST_DIR=pubsub-helloworld
+  - TEST_DIR=thumbnails
+  - TEST_DIR=time-server
+  - TEST_DIR=uppercase
+script: cd $TEST_DIR/functions && npm install && npm run testWithJest
