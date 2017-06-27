@@ -2,9 +2,9 @@
   "name": "generate-thumbnail-functions",
   "description": "Generate Thumbnail Firebase Functions sample",
   "dependencies": {
-    "@google-cloud/storage": "^0.4.0",
+    "@google-cloud/storage": "^1.1.1",
     "child-process-promise": "^2.2.0",
-    "firebase-admin": "^4.1.1",
+    "firebase-admin": "^5.0.0",
     "firebase-functions": "^0.5.1"
   },
   "devDependencies": {
