@@ -3,8 +3,8 @@
   "description": "A simple time server using HTTPS Cloud Function",
   "dependencies": {
     "cors": "^2.8.1",
-    "firebase-admin": "^5.0.0",
-    "firebase-functions": "^0.5.1",
+    "firebase-admin": "^5.5.0",
+    "firebase-functions": "^0.7.4",
     "moment": "^2.17.1"
   },
   "devDependencies": {

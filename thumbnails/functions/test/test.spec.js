@@ -30,7 +30,10 @@ describe('Short circuit thumbnail generation', () => {
     global.origConsole = global.console;
   });
   beforeEach(() => {
-    global.console = { log: jest.fn(msg => { global.origConsole.log(msg); }) };
+    global.console = {
+      log: jest.fn(msg => { global.origConsole.log(msg); }),
+      warn: jest.fn(msg => { global.origConsole.warn(msg); })
+    };
     storageObjectEvent = {
       data: {
         contentType: 'image/jpeg',
