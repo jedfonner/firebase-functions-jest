@@ -3,12 +3,11 @@
 // [START imports and mocks]
 const admin = require('firebase-admin');
 
-admin.initializeApp = jest.fn();
-
 const functions = require('firebase-functions');
 
 functions.config = jest.fn(() => ({
   firebase: {
+    credential: admin.credential.applicationDefault(),
     databaseURL: 'https://not-a-project.firebaseio.com',
     storageBucket: 'not-a-project.appspot.com'
   }
@@ -28,6 +27,7 @@ describe('makeUpperCase', () => {
     // See https://firebase.google.com/docs/functions/unit-testing#invoking_non-https_functions
     const fakeEvent = {
       data: new functions.database.DeltaSnapshot(null, null, null, testInput),
+      params: { pushId: 'test' }
     };
 
     // Create mock that overrides event.data.ref.parent.child().set()
@@ -52,16 +52,21 @@ describe('makeUpperCase', () => {
 describe('addMessage', () => {
   beforeEach(() => {
     // Custom admin database mock for testing the addMessage function
-    admin.database = jest.fn(() => ({
-      ref: jest.fn(location => ({
-        push: jest.fn(data => {
-          const mockSnapshot = { ref: location, val: jest.fn(() => data) };
-          return Promise.resolve(mockSnapshot);
-        })
-      }))
+    const refStub = jest.fn(location => ({
+      push: jest.fn(data => {
+        const mockSnapshot = { ref: location, val: jest.fn(() => data) };
+        return Promise.resolve(mockSnapshot);
+      })
     }));
+    // Code was changed in firebase-admin v0.7.4 to require overriding via the getter
+    // The following sinon code in test.js L130-131
+    //   databaseStub = sinon.stub(admin, 'database');
+    //   databaseStub.get(() => (() => ({ ref: refStub })));
+    // is equivalent to the following in Jest:
+    Object.defineProperty(admin, 'database', {
+      get: () => (() => ({ ref: refStub }))
+    });
   });
-
   // For testing asynchronous code that does not uses promises, use the done callback
   // See https://facebook.github.io/jest/docs/en/asynchronous.html#callbacks
   test('returns a 303 redirect', done => {
@@ -75,6 +80,7 @@ describe('addMessage', () => {
       redirect: (code, path) => {
         console.log(`redirect(${code}, ${path}) was called`);
         expect(code).toEqual(303);
+        expect(path).toEqual('/messages');
         done();
       }
     };
