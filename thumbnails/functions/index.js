@@ -10,15 +10,17 @@
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for t`he specific language governing permissions and
+ * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+"use strict";
 
 // [START import]
-const functions = require('firebase-functions');
-const gcs = require('@google-cloud/storage')();
-const spawn = require('child-process-promise').spawn;
+const functions = require("firebase-functions");
+const spawn = require("child-process-promise").spawn;
+const path = require("path");
+const os = require("os");
+const fs = require("fs");
 // [END import]
 
 // [START generateThumbnail]
@@ -27,66 +29,60 @@ const spawn = require('child-process-promise').spawn;
  * ImageMagick.
  */
 // [START generateThumbnailTrigger]
-exports.generateThumbnail = functions.storage.object().onChange(event => {
-// [END generateThumbnailTrigger]
-  // [START eventAttributes]
-  const object = event.data; // The Storage object.
+exports.generateThumbnail = functions.storage
+  .object()
+  .onFinalize(async object => {
+    // [END generateThumbnailTrigger]
+    // [START eventAttributes]
+    const fileBucket = object.bucket; // The Storage bucket that contains the file.
+    const filePath = object.name; // File path in the bucket.
+    const contentType = object.contentType; // File content type.
+    const metageneration = object.metageneration; // Number of times metadata has been generated. New objects have a value of 1.
+    // [END eventAttributes]
 
-  const fileBucket = object.bucket; // The Storage bucket that contains the file.
-  const filePath = object.name; // File path in the bucket.
-  const contentType = object.contentType; // File content type.
-  const resourceState = object.resourceState; // The resourceState is 'exists' or 'not_exists' (for file/folder deletions).
-  const metageneration = object.metageneration; // Number of times metadata has been generated. New objects have a value of 1.
-  // [END eventAttributes]
+    // [START stopConditions]
+    // Exit if this is triggered on a file that is not an image.
+    if (!contentType.startsWith("image/")) {
+      console.log("This is not an image.");
+      return null;
+    }
 
-  // [START stopConditions]
-  // Exit if this is triggered on a file that is not an image.
-  if (!contentType.startsWith('image/')) {
-    console.log('This is not an image.');
-    return;
-  }
+    // Get the file name.
+    const fileName = path.basename(filePath);
+    // Exit if the image is already a thumbnail.
+    if (fileName.startsWith("thumb_")) {
+      console.log("Already a Thumbnail.");
+      return null;
+    }
+    // [END stopConditions]
 
-  // Get the file name.
-  const fileName = filePath.split('/').pop();
-  // Exit if the image is already a thumbnail.
-  if (fileName.startsWith('thumb_')) {
-    console.log('Already a Thumbnail.');
-    return;
-  }
-
-  // Exit if this is a move or deletion event.
-  if (resourceState === 'not_exists') {
-    console.log('This is a deletion event.');
-    return;
-  }
-  
-  // Exit if file exists but is not new and is only being triggered
-  // because of a metadata change.
-  if (resourceState === 'exists' && metageneration > 1) {
-    console.log('This is a metadata change event.');
-    return;
-  }
-  // [END stopConditions]
-
-  // [START thumbnailGeneration]
-  // Download file from bucket.
-  const bucket = gcs.bucket(fileBucket);
-  const tempFilePath = `/tmp/${fileName}`;
-  return bucket.file(filePath).download({
-    destination: tempFilePath
-  }).then(() => {
-    console.log('Image downloaded locally to', tempFilePath);
+    // [START thumbnailGeneration]
+    // Download file from bucket.
+    const bucket = admin.storage().bucket(fileBucket);
+    const tempFilePath = path.join(os.tmpdir(), fileName);
+    const metadata = {
+      contentType: contentType
+    };
+    await bucket.file(filePath).download({ destination: tempFilePath });
+    console.log("Image downloaded locally to", tempFilePath);
     // Generate a thumbnail using ImageMagick.
-    return spawn('convert', [tempFilePath, '-thumbnail', '200x200>', tempFilePath]).then(() => {
-      console.log('Thumbnail created at', tempFilePath);
-      // We add a 'thumb_' prefix to thumbnails file name. That's where we'll upload the thumbnail.
-      const thumbFilePath = filePath.replace(/(\/)?([^\/]*)$/, '$1thumb_$2');
-      // Uploading the thumbnail.
-      return bucket.upload(tempFilePath, {
-        destination: thumbFilePath
-      });
+    await spawn("convert", [
+      tempFilePath,
+      "-thumbnail",
+      "200x200>",
+      tempFilePath
+    ]);
+    console.log("Thumbnail created at", tempFilePath);
+    // We add a 'thumb_' prefix to thumbnails file name. That's where we'll upload the thumbnail.
+    const thumbFileName = `thumb_${fileName}`;
+    const thumbFilePath = path.join(path.dirname(filePath), thumbFileName);
+    // Uploading the thumbnail.
+    await bucket.upload(tempFilePath, {
+      destination: thumbFilePath,
+      metadata: metadata
     });
+    // Once the thumbnail has been uploaded delete the local file to free up disk space.
+    fs.unlinkSync(tempFilePath);
+    // [END thumbnailGeneration]
   });
-  // [END thumbnailGeneration]
-});
 // [END generateThumbnail]
