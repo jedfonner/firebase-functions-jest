@@ -8,15 +8,14 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "firebase-functions-test": "^0.1.4",
+    "jest": "^23.6.0",
     "mocha": "^5.2.0",
-    "sinon": "^7.1.1",
-    "eslint": "^5.8.0",
-    "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.2.0",
-    "jest": "^23.6.0"
+    "prettier": "^1.15.2",
+    "sinon": "^7.1.1"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha --reporter spec **/test.js",
+    "test": "mocha --reporter spec **/test.offline.js",
     "testWithJest": "jest '.*spec.js'; exit 0"
   }
 }
