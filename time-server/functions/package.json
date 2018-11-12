@@ -11,6 +11,7 @@
     "eslint": "^5.8.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.2.0",
+    "firebase-functions-test": "^0.1.4",
     "jest": "^23.6.0"
   },
   "scripts": {

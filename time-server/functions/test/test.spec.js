@@ -1,70 +1,70 @@
 // You can run these unit tests by running "npm run testWithJest" inside the time-server/functions directory.
-const myFunctions = require('../index');
+const test = require("firebase-functions-test")();
 
-jest.mock('cors'); // See manual mock in ../__mocks__/cors.js
-require('cors'); // Jest will return the mock not the real module
+const myFunctions = require("../index");
 
-describe('date', () => {
+jest.mock("cors"); // See manual mock in ../__mocks__/cors.js
+require("cors"); // Jest will return the mock not the real module
 
-  test('returns a 403 for PUT calls', done => {
+describe("date", () => {
+  it("should return a 403 for PUT calls", done => {
     const mockRequest = {
-      method: 'PUT'
+      method: "PUT"
     };
     const mockResponse = {
-      status: (code) => {
+      status: code => {
         expect(code).toEqual(403);
         return {
           send: jest.fn(label => {
-            expect(label).toBe('Forbidden!');
+            expect(label).toBe("Forbidden!");
             done();
           })
-        }
+        };
       }
     };
     myFunctions.date(mockRequest, mockResponse);
   });
 
-  test('returns a 200 with formatted date when passed date format in query', done => {
+  it("should return a 200 with formatted date when passed date format in query", done => {
     const mockRequest = {
-      method: 'GET',
+      method: "GET",
       query: {
         format: "MMMM Do YYYY, h:mm:ss a"
       }
     };
     const mockResponse = {
-      status: (code) => {
+      status: code => {
         expect(code).toEqual(200);
         return {
           send: jest.fn(formattedDate => {
             expect(formattedDate).not.toBeNull();
             done();
           })
-        }
+        };
       }
     };
     myFunctions.date(mockRequest, mockResponse);
   });
 
-  test('returns a 200 with formatted date when passed date format in body', done => {
+  it("should return a 200 with formatted date when passed date format in body", done => {
     const mockRequest = {
-      method: 'GET',
+      method: "GET",
       query: {},
       body: {
         format: "MMMM Do YYYY, h:mm:ss a"
       }
     };
     const mockResponse = {
-      status: (code) => {
+      status: code => {
         expect(code).toEqual(200);
         return {
           send: jest.fn(formattedDate => {
             expect(formattedDate).not.toBeNull();
             done();
           })
-        }
+        };
       }
     };
     myFunctions.date(mockRequest, mockResponse);
   });
-
 });
