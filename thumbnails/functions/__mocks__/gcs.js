@@ -4,7 +4,7 @@ function bucketFn(bucketName) {
   return {
     upload: jest.fn((tempFilePath, config) => {
       // console.log(`Jest @google-cloud/storage.bucket.upload called with ${tempFilePath} and config`, config);
-      return config.destination;
+      return Promise.resolve(config.destination);
     }),
     file: jest.fn(name => {
       // console.log(`Jest @google-cloud/storage.bucket.file() called with ${name}`);
