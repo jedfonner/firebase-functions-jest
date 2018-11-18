@@ -8,9 +8,6 @@ admin.initializeApp = jest.fn();
 
 const test = require("firebase-functions-test")();
 
-// REMOVE?
-// const functions = require("firebase-functions");
-
 const myFunctions = require("../index");
 // [END imports and mocks]
 // [START tests]
