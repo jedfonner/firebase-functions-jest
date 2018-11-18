@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+"use strict";
 
 // [START functionsimport]
-const functions = require('firebase-functions');
+const functions = require("firebase-functions");
 // [END functionsimport]
 // [START additionalimports]
 // Moments library to format dates.
-const moment = require('moment');
+const moment = require("moment");
 // CORS Express middleware to enable CORS Requests.
-const cors = require('cors')({origin: true});
+const cors = require("cors")({
+  origin: true
+});
 // [END additionalimports]
 
 // [START all]
@@ -44,21 +46,18 @@ const cors = require('cors')({origin: true});
  */
 // [START trigger]
 exports.date = functions.https.onRequest((req, res) => {
-// [END trigger]
+  // [END trigger]
   // [START sendError]
   // Forbidding PUT requests.
-  if (req.method === 'PUT') {
-    res.status(403).send('Forbidden!');
-    // Added explicit return for testing because Firebase will stop
-    // running a function after receiving a response but Jest won't.
-    return;
+  if (req.method === "PUT") {
+    return res.status(403).send("Forbidden!");
   }
   // [END sendError]
 
   // [START usingMiddleware]
   // Enable CORS using the `cors` express middleware.
-  cors(req, res, () => {
-  // [END usingMiddleware]
+  return cors(req, res, () => {
+    // [END usingMiddleware]
     // Reading date format from URL query parameter.
     // [START readQueryParam]
     let format = req.query.format;
@@ -71,7 +70,7 @@ exports.date = functions.https.onRequest((req, res) => {
     }
     // [START sendResponse]
     const formattedDate = moment().format(format);
-    console.log('Sending Formatted date:', formattedDate);
+    console.log("Sending Formatted date:", formattedDate);
     res.status(200).send(formattedDate);
     // [END sendResponse]
   });

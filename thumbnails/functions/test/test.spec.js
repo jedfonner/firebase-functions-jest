@@ -1,46 +1,41 @@
 // You can run these unit tests by running "npm run testWithJest" inside the thumbnails/functions directory.
 
-// Mock the Firebase configuration
-require('firebase-functions').config = jest.fn(() => {
-  console.log('Jest firebase functions.config being called');
-  return {
-    firebase: {
-      databaseURL: 'https://not-a-project.firebaseio.com',
-      storageBucket: 'not-a-project.appspot.com'
-    }
-  };
-});
-
 // NOTE: @google-cloud/storage is auto-mocked via manual mock file
 
 // Mock child-process-promise spawn
-const cpp = require('child-process-promise');
+const cpp = require("child-process-promise");
 
 cpp.spawn = jest.fn((path, object) => {
-  console.log('Inside child-process-promise.spawn', path);
+  console.log("Inside child-process-promise.spawn", path);
   return Promise.resolve();
 });
 
-const myFunctions = require('../index');
+const fs = require("fs");
+jest.mock("fs");
+
+const test = require("firebase-functions-test")();
+
+const myFunctions = require("../index");
 
 let storageObjectEvent = null;
 
-describe('Short circuit thumbnail generation', () => {
+describe("Short circuit thumbnail generation", () => {
   beforeAll(() => {
     global.origConsole = global.console;
   });
   beforeEach(() => {
     global.console = {
-      log: jest.fn(msg => { global.origConsole.log(msg); }),
-      warn: jest.fn(msg => { global.origConsole.warn(msg); })
+      log: jest.fn((msg, arg) => {
+        global.origConsole.log(msg, arg);
+      })
     };
     storageObjectEvent = {
       data: {
-        contentType: 'image/jpeg',
-        mediaLink: '',
-        name: '/some/path/to/an/existingimage.jpg',
-        resourceState: 'exists',
-        metageneration: 1,
+        contentType: "image/jpeg",
+        mediaLink: "",
+        name: "/some/path/to/an/existingimage.jpg",
+        resourceState: "exists",
+        metageneration: 1
       }
     };
   });
@@ -48,59 +43,59 @@ describe('Short circuit thumbnail generation', () => {
     global.console = global.origConsole;
   });
 
-  test('Don\'t try to convert non-images', () => {
-    storageObjectEvent.data.contentType = 'someNonImageType';
-    const thumbnailPromise = myFunctions.generateThumbnail(storageObjectEvent);
-    return thumbnailPromise.then(data => {
-      expect(data).toBeUndefined();
-      expect(console.log).toHaveBeenCalledWith('This is not an image.');
-    });
+  it("Shouldn't try to convert non-images", async () => {
+    storageObjectEvent.data.contentType = "someNonImageType";
+    await myFunctions.generateThumbnail(storageObjectEvent);
+    // This is actually a horrible test because it tests the specific implementation
+    // instead of the output. But the function wasn't written with testability in mind
+    // so this is here as a demonstration of how mocks work rather than an example of
+    // a good test ;)
+    expect(global.console.log.mock.calls.length).toBe(1);
+    expect(global.console.log.mock.calls[0][0]).toBe("This is not an image.");
   });
 
-  test('Don\'t try to convert a thumbnail', () => {
-    storageObjectEvent.data.name = '/some/path/to/an/thumb_existingimage.jpg';
-    const thumbnailPromise = myFunctions.generateThumbnail(storageObjectEvent);
-    return thumbnailPromise.then(data => {
-      expect(data).toBeUndefined();
-      expect(console.log).toHaveBeenCalledWith('Already a Thumbnail.');
-    });
-  });
-
-  test('Don\'t convert for moves or deletes', () => {
-    storageObjectEvent.data.resourceState = 'not_exists';
-    const thumbnailPromise = myFunctions.generateThumbnail(storageObjectEvent);
-    return thumbnailPromise.then(data => {
-      expect(data).toBeUndefined();
-      expect(console.log).toHaveBeenCalledWith('This is a deletion event.');
-    });
-  });
-
-  test('Don\'t convert for metadata changes', () => {
-    storageObjectEvent.data.metageneration = 2;
-    const thumbnailPromise = myFunctions.generateThumbnail(storageObjectEvent);
-    return thumbnailPromise.then(data => {
-      expect(data).toBeUndefined();
-      expect(console.log).toHaveBeenCalledWith('This is a metadata change event.');
-    });
+  it("Shouldn't try to convert a thumbnail", async () => {
+    storageObjectEvent.data.name = "/some/path/to/an/thumb_existingimage.jpg";
+    await myFunctions.generateThumbnail(storageObjectEvent);
+    // This is actually a horrible test because it tests the specific implementation
+    // instead of the output. But the function wasn't written with testability in mind
+    // so this is here as a demonstration of how mocks work rather than an example of
+    // a good test ;)
+    expect(global.console.log.mock.calls.length).toBe(1);
+    expect(global.console.log.mock.calls[0][0]).toBe("Already a Thumbnail.");
   });
 });
 
-describe('Successful thumbnail generation', () => {
+describe("Successful thumbnail generation", () => {
+  beforeAll(() => {
+    global.origConsole = global.console;
+  });
   beforeEach(() => {
+    global.console = {
+      log: jest.fn((msg, arg) => {
+        global.origConsole.log(msg, arg);
+      })
+    };
     storageObjectEvent = {
       data: {
-        contentType: 'image/jpeg',
-        mediaLink: '',
-        name: '/some/path/to/an/existingimage.jpg',
+        contentType: "image/jpeg",
+        mediaLink: "",
+        name: "/some/path/to/an/existingimage.jpg"
       }
     };
   });
-  test('Converts a thumbnail', () => {
-    const thumbnailPromise = myFunctions.generateThumbnail(storageObjectEvent);
-    return thumbnailPromise.then(data => {
-      expect(data).not.toBeNull();
-      const thumbFileName = data.split('/').pop();
-      expect(thumbFileName).toMatch(/thumb_existingimage/);
-    });
+  afterAll(() => {
+    global.console = global.origConsole;
+  });
+
+  it("Should convert a thumbnail", async () => {
+    await myFunctions.generateThumbnail(storageObjectEvent);
+    // This is actually a horrible test because it tests the specific implementation
+    // instead of the output. But the function wasn't written with testability in mind
+    // so this is here as a demonstration of how mocks work rather than an example of
+    // a good test ;)
+    expect(global.console.log.mock.calls.length).toBe(3);
+    expect(global.console.log.mock.calls[0][1]).toBe("/tmp/existingimage.jpg");
+    expect(global.console.log.mock.calls[2][0]).toBe("Thumbnail created at");
   });
 });
